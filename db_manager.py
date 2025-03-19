@@ -3,10 +3,18 @@ from config import DB_CONFIG
 
 
 class DBManager:
+    """
+    Класс для работы с базой данных PostgreSQL.
+    """
+
     def __init__(self):
         self.conn = psycopg2.connect(**DB_CONFIG)
 
     def get_companies_and_vacancies_count(self):
+        """
+        Получает список всех компаний и количество вакансий у каждой компании.
+        :return: Список кортежей (название компании, количество вакансий)
+        """
         cur = self.conn.cursor()
         cur.execute("""
             SELECT e.name, COUNT(v.vacancy_id) 
@@ -19,6 +27,10 @@ class DBManager:
         return result
 
     def get_all_vacancies(self):
+        """
+        Получает список всех вакансий с указанием названия компании, названия вакансии, зарплаты и ссылки на вакансию.
+        :return: Список кортежей (название компании, название вакансии, зарплата от, зарплата до, валюта, ссылка)
+        """
         cur = self.conn.cursor()
         cur.execute("""
             SELECT e.name, v.title, v.salary_from, v.salary_to, v.currency, v.url 
@@ -30,6 +42,10 @@ class DBManager:
         return result
 
     def get_avg_salary(self):
+        """
+        Получает среднюю зарплату по вакансиям.
+        :return: Средняя зарплата (float)
+        """
         cur = self.conn.cursor()
         cur.execute("""
             SELECT AVG((salary_from + salary_to) / 2) 
@@ -41,6 +57,10 @@ class DBManager:
         return result
 
     def get_vacancies_with_higher_salary(self):
+        """
+        Получает список всех вакансий, у которых зарплата выше средней по всем вакансиям.
+        :return: Список кортежей с данными о вакансиях
+        """
         avg_salary = self.get_avg_salary()
         cur = self.conn.cursor()
         cur.execute("""
@@ -52,6 +72,11 @@ class DBManager:
         return result
 
     def get_vacancies_with_keyword(self, keyword):
+        """
+        Получает список всех вакансий, в названии которых содержатся переданные в метод слова.
+        :param keyword: Ключевое слово для поиска
+        :return: Список кортежей с данными о вакансиях
+        """
         cur = self.conn.cursor()
         cur.execute("""
             SELECT * FROM vacancies 
@@ -62,5 +87,7 @@ class DBManager:
         return result
 
     def close(self):
+        """
+        Закрывает соединение с базой данных.
+        """
         self.conn.close()
-
