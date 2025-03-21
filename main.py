@@ -1,12 +1,13 @@
 from api import get_employer_data, get_vacancies_data
-from database import create_tables, insert_employer_data, insert_vacancy_data
+from database import create_database, create_tables, insert_employer_data, insert_vacancy_data
 import psycopg2
 from config import DB_CONFIG
 from db_manager import DBManager
 
 
 def main():
-    # Создание таблиц
+    # Создание базы данных и таблиц
+    create_database("hh_vacancies", "hh_user", "hh_password")  # Добавлено
     create_tables()
 
     # Список ID компаний с hh.ru

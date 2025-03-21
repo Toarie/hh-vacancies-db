@@ -1,40 +1,77 @@
 import psycopg2
+from psycopg2 import sql
 from config import DB_CONFIG
+
+
+def create_database(db_name, user, password, host="localhost", port="5432"):
+    """
+    Создает базу данных в PostgreSQL.
+    :param db_name: Название базы данных
+    :param user: Имя пользователя
+    :param password: Пароль
+    :param host: Хост (по умолчанию localhost)
+    :param port: Порт (по умолчанию 5432)
+    """
+    try:
+        # Подключаемся к серверу PostgreSQL (к базе данных postgres по умолчанию)
+        conn = psycopg2.connect(dbname="postgres", user=user, password=password, host=host, port=port)
+        conn.autocommit = True  # Включаем автоматическое подтверждение транзакций
+        cur = conn.cursor()
+
+        # Проверяем, существует ли база данных
+        cur.execute(sql.SQL("SELECT 1 FROM pg_database WHERE datname = {}").format(sql.Literal(db_name)))
+        exists = cur.fetchone()
+
+        # Если база данных не существует, создаем её
+        if not exists:
+            cur.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(db_name)))
+            print(f"База данных {db_name} успешно создана.")
+        else:
+            print(f"База данных {db_name} уже существует.")
+
+        cur.close()
+        conn.close()
+    except Exception as e:
+        print(f"Ошибка при создании базы данных: {e}")
 
 
 def create_tables():
     """
     Создает таблицы в базе данных PostgreSQL.
     """
-    conn = psycopg2.connect(**DB_CONFIG)
-    cur = conn.cursor()
+    try:
+        conn = psycopg2.connect(**DB_CONFIG)
+        cur = conn.cursor()
 
-    # Создание таблицы employers
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS employers (
-            employer_id SERIAL PRIMARY KEY,
-            name VARCHAR(255) NOT NULL,
-            description TEXT,
-            website VARCHAR(255)
-        )
-    """)
+        # Создание таблицы employers
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS employers (
+                employer_id SERIAL PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                description TEXT,
+                website VARCHAR(255)
+            )
+        """)
 
-    # Создание таблицы vacancies
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS vacancies (
-            vacancy_id SERIAL PRIMARY KEY,
-            employer_id INT REFERENCES employers(employer_id),
-            title VARCHAR(255) NOT NULL,
-            salary_from INT,
-            salary_to INT,
-            currency VARCHAR(10),
-            url VARCHAR(255)
-        )
-    """)
+        # Создание таблицы vacancies
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS vacancies (
+                vacancy_id SERIAL PRIMARY KEY,
+                employer_id INT REFERENCES employers(employer_id),
+                title VARCHAR(255) NOT NULL,
+                salary_from INT,
+                salary_to INT,
+                currency VARCHAR(10),
+                url VARCHAR(255)
+            )
+        """)
 
-    conn.commit()
-    cur.close()
-    conn.close()
+        conn.commit()
+        cur.close()
+        conn.close()
+        print("Таблицы успешно созданы.")
+    except Exception as e:
+        print(f"Ошибка при создании таблиц: {e}")
 
 
 def insert_employer_data(conn, employer_data):
@@ -75,3 +112,10 @@ def insert_vacancy_data(conn, vacancy_data, employer_id):
         """, (employer_id, vacancy['name'], salary_from, salary_to, currency, vacancy['alternate_url']))
     conn.commit()
     cur.close()
+
+
+if __name__ == "__main__":
+    # Создаем базу данных и таблицы
+    create_database("hh_vacancies", "hh_user", "hh_password")
+    create_tables()
+
