@@ -7,21 +7,21 @@ from db_manager import DBManager
 
 def main():
     # Создание базы данных и таблиц
-    create_database("hh_vacancies", "hh_user", "hh_password")  # Добавлено
+    create_database()  # Теперь без параметров, берет данные из DB_CONFIG
     create_tables()
 
     # Список ID компаний с hh.ru
     employer_ids = [
         "15478",  # VK
-        "1740",  # Яндекс
-        "3529",  # Сбер
+        "1740",   # Яндекс
+        "3529",   # Сбер
         "78638",  # Тинькофф
         "1122462",  # Ozon
         "41862",  # Ростелеком
-        "3776",  # МТС
+        "3776",   # МТС
         "907345",  # Лаборатория Касперского
         "87021",  # 2ГИС
-        "2180"  # Авито
+        "2180"    # Авито
     ]
 
     # Подключение к базе данных
@@ -43,22 +43,28 @@ def main():
     db_manager = DBManager()
 
     print("Компании и количество вакансий:")
-    print(db_manager.get_companies_and_vacancies_count())
+    for company, count in db_manager.get_companies_and_vacancies_count():
+        print(f"{company}: {count} вакансий")
 
     print("\nВсе вакансии:")
-    print(db_manager.get_all_vacancies())
+    for company, title, salary_from, salary_to, currency, url in db_manager.get_all_vacancies():
+        salary = f"{salary_from or '?'}-{salary_to or '?'} {currency or ''}"
+        print(f"{company}: {title} ({salary}) | {url}")
 
-    print("\nСредняя зарплата:")
-    print(db_manager.get_avg_salary())
+    avg_salary = db_manager.get_avg_salary()
+    print(f"\nСредняя зарплата: {avg_salary:.2f}")
 
     print("\nВакансии с зарплатой выше средней:")
-    print(db_manager.get_vacancies_with_higher_salary())
+    for vacancy in db_manager.get_vacancies_with_higher_salary():
+        print(f"{vacancy[2]} (ID: {vacancy[0]})")
 
     print("\nВакансии с ключевым словом 'python':")
-    print(db_manager.get_vacancies_with_keyword("python"))
+    for vacancy in db_manager.get_vacancies_with_keyword("python"):
+        print(f"{vacancy[2]} (ID: {vacancy[0]})")
 
     db_manager.close()
 
 
 if __name__ == "__main__":
     main()
+
