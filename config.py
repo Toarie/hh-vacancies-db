@@ -1,7 +1,8 @@
 import os
 from dotenv import load_dotenv
 
-load_dotenv()  # Загружаем переменные из .env
+# Загружаем переменные из .env
+load_dotenv()
 
 DB_CONFIG = {
     'dbname': os.getenv('DB_NAME'),
@@ -10,3 +11,4 @@ DB_CONFIG = {
     'host': os.getenv('DB_HOST'),
     'port': os.getenv('DB_PORT')
 }
+
