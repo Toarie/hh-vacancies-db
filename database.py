@@ -1,33 +1,42 @@
 import psycopg2
 from psycopg2 import sql
 from config import DB_CONFIG
+import os
+from dotenv import load_dotenv
 
+# Загружаем переменные окружения
+load_dotenv()
 
-def create_database(db_name, user, password, host="localhost", port="5432"):
+def create_database():
     """
-    Создает базу данных в PostgreSQL.
-    :param db_name: Название базы данных
-    :param user: Имя пользователя
-    :param password: Пароль
-    :param host: Хост (по умолчанию localhost)
-    :param port: Порт (по умолчанию 5432)
+    Создает базу данных в PostgreSQL, используя параметры из DB_CONFIG.
     """
     try:
         # Подключаемся к серверу PostgreSQL (к базе данных postgres по умолчанию)
-        conn = psycopg2.connect(dbname="postgres", user=user, password=password, host=host, port=port)
+        conn = psycopg2.connect(
+            dbname="postgres",
+            user=DB_CONFIG['user'],
+            password=DB_CONFIG['password'],
+            host=DB_CONFIG['host'],
+            port=DB_CONFIG['port']
+        )
         conn.autocommit = True  # Включаем автоматическое подтверждение транзакций
         cur = conn.cursor()
 
         # Проверяем, существует ли база данных
-        cur.execute(sql.SQL("SELECT 1 FROM pg_database WHERE datname = {}").format(sql.Literal(db_name)))
+        cur.execute(sql.SQL("SELECT 1 FROM pg_database WHERE datname = {}").format(
+            sql.Literal(DB_CONFIG['dbname'])
+        ))
         exists = cur.fetchone()
 
         # Если база данных не существует, создаем её
         if not exists:
-            cur.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(db_name)))
-            print(f"База данных {db_name} успешно создана.")
+            cur.execute(sql.SQL("CREATE DATABASE {}").format(
+                sql.Identifier(DB_CONFIG['dbname'])
+            ))
+            print(f"База данных {DB_CONFIG['dbname']} успешно создана.")
         else:
-            print(f"База данных {db_name} уже существует.")
+            print(f"База данных {DB_CONFIG['dbname']} уже существует.")
 
         cur.close()
         conn.close()
@@ -116,6 +125,7 @@ def insert_vacancy_data(conn, vacancy_data, employer_id):
 
 if __name__ == "__main__":
     # Создаем базу данных и таблицы
-    create_database("hh_vacancies", "hh_user", "hh_password")
+    create_database()
     create_tables()
+
 
